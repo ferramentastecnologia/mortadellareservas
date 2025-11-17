@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "Reservation" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "paymentId" TEXT NOT NULL,
     "externalRef" TEXT NOT NULL,
     "nome" TEXT NOT NULL,
@@ -9,26 +9,29 @@ CREATE TABLE "Reservation" (
     "data" TEXT NOT NULL,
     "horario" TEXT NOT NULL,
     "numeroPessoas" INTEGER NOT NULL,
-    "valor" REAL NOT NULL,
+    "valor" DOUBLE PRECISION NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Reservation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Voucher" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "reservationId" TEXT NOT NULL,
     "codigo" TEXT NOT NULL,
-    "valor" REAL NOT NULL,
+    "valor" DOUBLE PRECISION NOT NULL,
     "qrCodeData" TEXT NOT NULL,
     "utilizado" BOOLEAN NOT NULL DEFAULT false,
-    "dataUtilizacao" DATETIME,
-    "dataValidade" DATETIME NOT NULL,
+    "dataUtilizacao" TIMESTAMP(3),
+    "dataValidade" TIMESTAMP(3) NOT NULL,
     "pdfUrl" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "Voucher_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Voucher_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -57,3 +60,6 @@ CREATE INDEX "Voucher_codigo_idx" ON "Voucher"("codigo");
 
 -- CreateIndex
 CREATE INDEX "Voucher_utilizado_idx" ON "Voucher"("utilizado");
+
+-- AddForeignKey
+ALTER TABLE "Voucher" ADD CONSTRAINT "Voucher_reservationId_fkey" FOREIGN KEY ("reservationId") REFERENCES "Reservation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
