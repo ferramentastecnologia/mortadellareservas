@@ -41,8 +41,8 @@ export default function ReservaForm() {
     setDadosReserva(data);
 
     try {
-      // Chamar API de criação de pagamento
-      const response = await fetch('/api/create-payment', {
+      // Chamar API de criação de pagamento (DEMO)
+      const response = await fetch('/api/create-payment-demo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
