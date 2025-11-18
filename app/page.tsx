@@ -241,9 +241,10 @@ export default function Home() {
       {/* Localização */}
       <section className="py-16 bg-black border-t border-zinc-800">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <h3 className="text-3xl font-bold text-center mb-12">Nosso Restaurante</h3>
-            <div className="grid md:grid-cols-2 gap-8">
+
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
               <div className="space-y-4">
                 <h4 className="text-xl font-semibold text-[#0e9a20]">Localização</h4>
                 <p className="text-zinc-300">
@@ -277,6 +278,35 @@ export default function Home() {
                   Reserve agora e garanta um final de ano inesquecível!
                 </p>
               </div>
+            </div>
+
+            {/* Mapa do Google Maps */}
+            <div className="w-full h-[450px] rounded-lg overflow-hidden border-2 border-[#0e9a20]/30 shadow-2xl">
+              <iframe
+                src="https://www.google.com/maps?q=Av.+Martin+Luther,+1001+-+Victor+Konder,+Blumenau+-+SC&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Mortadella Ristorante - Av. Martin Luther, 1001 - Blumenau/SC"
+              ></iframe>
+            </div>
+
+            <div className="text-center mt-6">
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=Av.+Martin+Luther,+1001+-+Victor+Konder,+Blumenau+-+SC"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#0e9a20] hover:bg-[#0a6b16] text-white px-8 py-3 rounded-lg transition font-medium shadow-lg"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Como Chegar (Abrir no Google Maps)
+              </a>
             </div>
           </div>
         </div>
