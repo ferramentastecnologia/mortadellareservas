@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { CreditCard, Smartphone, Barcode, Check } from 'lucide-react';
+import { CreditCard, Smartphone, Check } from 'lucide-react';
 
 export default function PagamentoDemoContent() {
   const searchParams = useSearchParams();
@@ -95,26 +95,6 @@ export default function PagamentoDemoContent() {
                   <p className="text-sm text-zinc-400">Em até 12x sem juros</p>
                 </div>
                 {loading && selectedMethod === 'credit_card' && (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0e9a20]"></div>
-                )}
-              </div>
-            </button>
-
-            {/* Boleto */}
-            <button
-              onClick={() => handlePayment('boleto')}
-              disabled={loading}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 border-2 border-transparent hover:border-[#0e9a20] rounded-lg p-6 transition text-left disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#0e9a20]/20 rounded-full flex items-center justify-center">
-                  <Barcode className="w-6 h-6 text-[#0e9a20]" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-lg">Boleto Bancário</h4>
-                  <p className="text-sm text-zinc-400">Vencimento em 3 dias</p>
-                </div>
-                {loading && selectedMethod === 'boleto' && (
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0e9a20]"></div>
                 )}
               </div>
