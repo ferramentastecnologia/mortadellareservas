@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { nome, email, telefone, data: dataReserva, horario, numeroPessoas } = data;
+    const { nome, email, telefone, tipoDocumento, documento, data: dataReserva, horario, numeroPessoas } = data;
 
     console.log('📝 Criando reserva DEMO:', { nome, email, dataReserva, horario, numeroPessoas });
 
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
         nome,
         email,
         telefone,
+        cpfCnpj: documento ? documento.replace(/\D/g, '') : null,
         data: dataReserva,
         horario,
         numeroPessoas: parseInt(numeroPessoas),

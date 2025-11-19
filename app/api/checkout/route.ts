@@ -6,10 +6,10 @@ const ASAAS_API_URL = process.env.ASAAS_API_URL || 'https://sandbox.asaas.com/ap
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nome, email, telefone, data, horario, numeroPessoas, valor } = body;
+    const { nome, email, telefone, tipoDocumento, documento, data, horario, numeroPessoas, valor } = body;
 
     // Validações básicas
-    if (!nome || !email || !telefone || !data || !horario || !numeroPessoas) {
+    if (!nome || !email || !telefone || !documento || !data || !horario || !numeroPessoas) {
       return NextResponse.json(
         { success: false, error: 'Dados incompletos' },
         { status: 400 }
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         name: nome,
         email: email,
         phone: telefone.replace(/\D/g, ''),
-        cpfCnpj: '', // Opcional
+        cpfCnpj: documento.replace(/\D/g, ''),
         notificationDisabled: false,
       }),
     });

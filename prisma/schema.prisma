@@ -19,6 +19,7 @@ model Reservation {
   nome          String
   email         String
   telefone      String
+  cpfCnpj       String?  // CPF ou CNPJ do cliente (opcional)
 
   // Detalhes da reserva
   data          String   // YYYY-MM-DD
