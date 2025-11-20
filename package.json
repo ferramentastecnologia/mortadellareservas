@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/nodemailer": "^7.0.3",
     "@types/pdfkit": "^0.17.3",
     "@types/qrcode": "^1.5.6",
+    "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "form-data": "^4.0.4",
