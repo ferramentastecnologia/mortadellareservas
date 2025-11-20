@@ -119,6 +119,45 @@ export default function Home() {
               <p className="text-zinc-400">
                 Preencha os dados abaixo e garanta sua mesa para o final de ano
               </p>
+
+              {/* Informações Importantes */}
+              <div className="max-w-3xl mx-auto mb-8 bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+                <h4 className="text-lg font-semibold mb-4 text-[#0e9a20]">📋 Informações Importantes</h4>
+                <div className="grid md:grid-cols-2 gap-4 text-sm text-left">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300">Reservas de <strong>2 a 208 pessoas</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300">Apenas <strong>múltiplos de 2</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300"><strong>49 mesas disponíveis</strong> por data</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300">Capacidade: <strong>208 pessoas/dia</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300">Horários: <strong>18:00 às 22:00</strong></span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300"><strong>Escolha suas mesas</strong> no mapa</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300"><strong>Pagamento online</strong> seguro</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-zinc-300"><strong>Voucher automático</strong> por e-mail</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <ReservaForm />
           </div>
