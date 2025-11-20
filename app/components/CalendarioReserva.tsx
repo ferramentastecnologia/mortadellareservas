@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CalendarioReservaProps {
@@ -9,9 +9,13 @@ interface CalendarioReservaProps {
 }
 
 export default function CalendarioReserva({ onSelectDate, selectedDate }: CalendarioReservaProps) {
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // Mês atual
+  const [currentMonth, setCurrentMonth] = useState(10); // Novembro por padrão
   const [currentYear] = useState(2025);
+  const [today, setToday] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
 
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -78,6 +82,7 @@ export default function CalendarioReserva({ onSelectDate, selectedDate }: Calend
   };
 
   const prevMonth = () => {
+    if (!today) return;
     const minMonth = today.getMonth(); // Não pode voltar antes do mês atual
     if (currentMonth > minMonth) {
       setCurrentMonth(currentMonth - 1);
@@ -85,6 +90,14 @@ export default function CalendarioReserva({ onSelectDate, selectedDate }: Calend
   };
 
   const days = getDaysInMonth();
+
+  if (!today) {
+    return (
+      <div className="bg-black rounded-lg border border-zinc-700 p-6 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#E53935]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black rounded-lg border border-zinc-700 p-6">
@@ -145,8 +158,8 @@ export default function CalendarioReserva({ onSelectDate, selectedDate }: Calend
                 aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition
                 ${day.available
                   ? isSelected
-                    ? 'bg-[#0e9a20] text-white hover:bg-[#0a6b16]'
-                    : 'bg-zinc-800 text-white hover:bg-[#0e9a20] hover:text-white'
+                    ? 'bg-[#E53935] text-white hover:bg-[#B71C1C]'
+                    : 'bg-zinc-800 text-white hover:bg-[#E53935] hover:text-white'
                   : 'text-zinc-600 cursor-not-allowed'
                 }
               `}
@@ -161,7 +174,7 @@ export default function CalendarioReserva({ onSelectDate, selectedDate }: Calend
       <div className="mt-6 pt-4 border-t border-zinc-800">
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-[#0e9a20]"></div>
+            <div className="w-4 h-4 rounded bg-[#E53935]"></div>
             <span className="text-zinc-400">Data selecionada</span>
           </div>
           <div className="flex items-center gap-2">
