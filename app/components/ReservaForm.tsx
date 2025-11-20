@@ -1,152 +1,120 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Calendar, Users, Clock, User, Mail, Phone, CreditCard } from 'lucide-react';
 import CalendarioReserva from './CalendarioReserva';
+import MapaMesas from './MapaMesas';
 
 type ReservaFormData = {
   nome: string;
   email: string;
   telefone: string;
-  tipoDocumento: 'cpf' | 'cnpj';
-  documento: string;
+  cpfCnpj: string;
   data: string;
   horario: string;
   numeroPessoas: number;
 };
 
 const horarios = [
-  '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'
+  '18:00', '18:30', '19:00', '19:30'
 ];
-
-// Funções de validação e formatação
-const validarCPF = (cpf: string): boolean => {
-  cpf = cpf.replace(/\D/g, '');
-
-  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-
-  let soma = 0;
-  for (let i = 0; i < 9; i++) {
-    soma += parseInt(cpf.charAt(i)) * (10 - i);
-  }
-  let resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpf.charAt(9))) return false;
-
-  soma = 0;
-  for (let i = 0; i < 10; i++) {
-    soma += parseInt(cpf.charAt(i)) * (11 - i);
-  }
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpf.charAt(10))) return false;
-
-  return true;
-};
-
-const validarCNPJ = (cnpj: string): boolean => {
-  cnpj = cnpj.replace(/\D/g, '');
-
-  if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
-
-  let tamanho = cnpj.length - 2;
-  let numeros = cnpj.substring(0, tamanho);
-  const digitos = cnpj.substring(tamanho);
-  let soma = 0;
-  let pos = tamanho - 7;
-
-  for (let i = tamanho; i >= 1; i--) {
-    soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
-    if (pos < 2) pos = 9;
-  }
-
-  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-  if (resultado !== parseInt(digitos.charAt(0))) return false;
-
-  tamanho = tamanho + 1;
-  numeros = cnpj.substring(0, tamanho);
-  soma = 0;
-  pos = tamanho - 7;
-
-  for (let i = tamanho; i >= 1; i--) {
-    soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
-    if (pos < 2) pos = 9;
-  }
-
-  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
-  if (resultado !== parseInt(digitos.charAt(1))) return false;
-
-  return true;
-};
-
-const formatarCPF = (cpf: string): string => {
-  cpf = cpf.replace(/\D/g, '');
-  cpf = cpf.substring(0, 11);
-  cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
-  cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
-  cpf = cpf.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-  return cpf;
-};
-
-const formatarCNPJ = (cnpj: string): string => {
-  cnpj = cnpj.replace(/\D/g, '');
-  cnpj = cnpj.substring(0, 14);
-  cnpj = cnpj.replace(/(\d{2})(\d)/, '$1.$2');
-  cnpj = cnpj.replace(/(\d{3})(\d)/, '$1.$2');
-  cnpj = cnpj.replace(/(\d{3})(\d)/, '$1/$2');
-  cnpj = cnpj.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
-  return cnpj;
-};
 
 export default function ReservaForm() {
   const [loading, setLoading] = useState(false);
   const [etapa, setEtapa] = useState<'formulario' | 'pagamento'>('formulario');
   const [dadosReserva, setDadosReserva] = useState<ReservaFormData | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [tipoDocumento, setTipoDocumento] = useState<'cpf' | 'cnpj'>('cpf');
+  const [selectedTables, setSelectedTables] = useState<number[]>([]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
-  } = useForm<ReservaFormData>({
-    defaultValues: {
-      tipoDocumento: 'cpf',
-    },
-  });
+    control,
+  } = useForm<ReservaFormData>();
+
+  // Watch para atualizar o mapa de mesas em tempo real
+  const watchedData = useWatch({ control, name: 'data' });
+  const watchedHorario = useWatch({ control, name: 'horario' });
+  const watchedNumeroPessoas = useWatch({ control, name: 'numeroPessoas' });
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
     setValue('data', date);
   };
 
+  const handleMesasSelect = (mesas: number[]) => {
+    setSelectedTables(mesas);
+  };
+
   const onSubmit = async (data: ReservaFormData) => {
+    // Validar seleção de mesas
+    const mesasNecessarias = Math.ceil(data.numeroPessoas / 4);
+    if (selectedTables.length !== mesasNecessarias) {
+      alert(`Por favor, selecione exatamente ${mesasNecessarias} mesa(s) para ${data.numeroPessoas} pessoas.`);
+      return;
+    }
+
     setLoading(true);
     setDadosReserva(data);
 
     try {
-      // Chamar API de criação de pagamento (DEMO)
-      const response = await fetch('/api/create-payment-demo', {
+      // Primeiro, verificar disponibilidade
+      const availabilityResponse = await fetch('/api/check-availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          data: data.data,
+          horario: data.horario,
+          numeroPessoas: data.numeroPessoas,
+        }),
       });
+
+      const availabilityData = await availabilityResponse.json();
+
+      if (!availabilityData.available) {
+        alert(
+          `❌ Infelizmente não temos disponibilidade para ${data.numeroPessoas} pessoas neste horário.\n\n` +
+          `Capacidade disponível: ${availabilityData.capacity?.available || 0} pessoas\n\n` +
+          `Por favor, escolha outro horário ou reduza o número de pessoas.`
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Se houver disponibilidade, prosseguir com o pagamento
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          mesasSelecionadas: JSON.stringify(selectedTables),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Erro na resposta:', errorData);
+        alert(`Erro ao processar reserva: ${errorData.error || 'Tente novamente.'}`);
+        setLoading(false);
+        return;
+      }
 
       const result = await response.json();
 
-      if (result.success && result.invoiceUrl) {
-        // Redirecionar para página de pagamento do Asaas
-        window.location.href = result.invoiceUrl;
+      if (result.success && result.pixQrCode) {
+        // Redirecionar para nossa página de pagamento transparente
+        const paymentData = encodeURIComponent(JSON.stringify(result));
+        window.location.href = `/pagamento?data=${paymentData}`;
       } else {
         alert('Erro ao processar reserva. Tente novamente.');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Erro:', error);
-      alert('Erro ao processar reserva. Tente novamente.');
-    } finally {
+      alert('Erro ao processar reserva. Verifique sua conexão e tente novamente.');
       setLoading(false);
     }
   };
@@ -159,7 +127,7 @@ export default function ReservaForm() {
           <div className="space-y-6">
             <div className="space-y-4">
               <h4 className="text-xl font-semibold flex items-center gap-2">
-                <User className="w-5 h-5 text-[#0e9a20]" />
+                <User className="w-5 h-5 text-[#E53935]" />
                 Seus Dados
               </h4>
 
@@ -168,7 +136,7 @@ export default function ReservaForm() {
                 <input
                   {...register('nome', { required: 'Nome é obrigatório' })}
                   type="text"
-                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#0e9a20] text-white"
+                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#E53935] text-white"
                   placeholder="Seu nome completo"
                 />
                 {errors.nome && (
@@ -187,7 +155,7 @@ export default function ReservaForm() {
                     },
                   })}
                   type="email"
-                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#0e9a20] text-white"
+                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#E53935] text-white"
                   placeholder="seu@email.com"
                 />
                 {errors.email && (
@@ -206,7 +174,7 @@ export default function ReservaForm() {
                     },
                   })}
                   type="tel"
-                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#0e9a20] text-white"
+                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#E53935] text-white"
                   placeholder="(00) 00000-0000"
                 />
                 {errors.telefone && (
@@ -215,65 +183,21 @@ export default function ReservaForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Tipo de Documento *</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      {...register('tipoDocumento')}
-                      type="radio"
-                      value="cpf"
-                      onChange={(e) => {
-                        setTipoDocumento('cpf');
-                        setValue('documento', '');
-                      }}
-                      className="mr-2 w-4 h-4 text-[#0e9a20] bg-black border-zinc-700 focus:ring-[#0e9a20]"
-                    />
-                    <span>CPF</span>
-                  </label>
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      {...register('tipoDocumento')}
-                      type="radio"
-                      value="cnpj"
-                      onChange={(e) => {
-                        setTipoDocumento('cnpj');
-                        setValue('documento', '');
-                      }}
-                      className="mr-2 w-4 h-4 text-[#0e9a20] bg-black border-zinc-700 focus:ring-[#0e9a20]"
-                    />
-                    <span>CNPJ</span>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  {tipoDocumento === 'cpf' ? 'CPF' : 'CNPJ'} *
-                </label>
+                <label className="block text-sm font-medium mb-2">CPF ou CNPJ *</label>
                 <input
-                  {...register('documento', {
-                    required: `${tipoDocumento === 'cpf' ? 'CPF' : 'CNPJ'} é obrigatório`,
-                    validate: (value) => {
-                      const documento = value.replace(/\D/g, '');
-                      if (tipoDocumento === 'cpf') {
-                        return validarCPF(documento) || 'CPF inválido';
-                      } else {
-                        return validarCNPJ(documento) || 'CNPJ inválido';
-                      }
+                  {...register('cpfCnpj', {
+                    required: 'CPF ou CNPJ é obrigatório',
+                    pattern: {
+                      value: /^[\d.-]+$/,
+                      message: 'CPF/CNPJ inválido',
                     },
                   })}
                   type="text"
-                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#0e9a20] text-white"
-                  placeholder={tipoDocumento === 'cpf' ? '000.000.000-00' : '00.000.000/0000-00'}
-                  onChange={(e) => {
-                    const formatted = tipoDocumento === 'cpf'
-                      ? formatarCPF(e.target.value)
-                      : formatarCNPJ(e.target.value);
-                    setValue('documento', formatted);
-                  }}
+                  className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#E53935] text-white"
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 />
-                {errors.documento && (
-                  <p className="text-red-500 text-sm mt-1">{errors.documento.message}</p>
+                {errors.cpfCnpj && (
+                  <p className="text-red-500 text-sm mt-1">{errors.cpfCnpj.message}</p>
                 )}
               </div>
             </div>
@@ -285,22 +209,25 @@ export default function ReservaForm() {
               <div className="bg-black rounded-lg p-6 border border-zinc-700">
                 <div className="flex items-center justify-between pb-4 border-b border-zinc-700 mb-4">
                   <span className="text-lg text-zinc-400">Valor da Reserva:</span>
-                  <span className="text-3xl font-bold text-[#0e9a20]">R$ 50,00</span>
+                  <span className="text-3xl font-bold text-[#E53935]">R$ 50,00</span>
                 </div>
 
                 <div className="bg-zinc-800 rounded-lg p-4 mb-6">
                   <p className="text-sm text-zinc-300 mb-2">
-                    <strong className="text-[#0e9a20]">100% conversível</strong> em consumação
+                    <strong className="text-[#E53935]">100% conversível</strong> em consumação
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-zinc-400 mb-2">
                     Este valor retorna integralmente no dia da sua reserva
+                  </p>
+                  <p className="text-xs text-yellow-400 border-t border-zinc-700 pt-2 mt-2">
+                    ⚠️ <strong>Importante:</strong> Em caso de não comparecimento, o valor de R$ 50,00 ficará retido
                   </p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#0e9a20] hover:bg-[#0a6b16] text-white font-bold text-lg py-5 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  className="w-full bg-[#E53935] hover:bg-[#B71C1C] text-white font-bold text-lg py-5 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     'Processando...'
@@ -322,7 +249,7 @@ export default function ReservaForm() {
           {/* Coluna 2: Detalhes da Reserva */}
           <div className="space-y-4">
             <h4 className="text-xl font-semibold flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#0e9a20]" />
+              <Calendar className="w-5 h-5 text-[#E53935]" />
               Detalhes da Reserva
             </h4>
 
@@ -340,7 +267,7 @@ export default function ReservaForm() {
                 <p className="text-red-500 text-sm mt-2">{errors.data.message}</p>
               )}
               {selectedDate && (
-                <p className="text-[#0e9a20] text-sm mt-2">
+                <p className="text-[#E53935] text-sm mt-2">
                   Data selecionada: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', {
                     weekday: 'long',
                     day: '2-digit',
@@ -376,26 +303,43 @@ export default function ReservaForm() {
                   required: 'Número de pessoas é obrigatório',
                   valueAsNumber: true,
                   min: {
-                    value: 1,
-                    message: 'Mínimo 1 pessoa'
+                    value: 2,
+                    message: 'Mínimo 2 pessoas'
                   },
                   max: {
-                    value: 100,
-                    message: 'Para grupos acima de 100 pessoas, entre em contato diretamente'
+                    value: 60,
+                    message: 'Máximo 60 pessoas por reserva'
+                  },
+                  validate: (value) => {
+                    if (value % 2 !== 0) {
+                      return 'Apenas múltiplos de 2 são permitidos';
+                    }
+                    return true;
                   }
                 })}
                 type="number"
-                min="1"
-                max="100"
-                placeholder="Digite o número de pessoas"
-                className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#0e9a20] text-white"
+                min="2"
+                max="60"
+                step="2"
+                placeholder="Digite o número de pessoas (múltiplos de 2)"
+                className="w-full px-4 py-3 bg-black border border-zinc-700 rounded-lg focus:outline-none focus:border-[#E53935] text-white"
               />
               {errors.numeroPessoas && (
                 <p className="text-red-500 text-sm mt-1">{errors.numeroPessoas.message}</p>
               )}
               <p className="text-xs text-zinc-500 mt-1">
-                Para grupos grandes, reserve com antecedência
+                Múltiplos de 2 • Mínimo: 2 pessoas • Máximo: 60 pessoas
               </p>
+            </div>
+
+            {/* Mapa de Mesas */}
+            <div className="md:col-span-2">
+              <MapaMesas
+                data={watchedData || ''}
+                horario={watchedHorario || ''}
+                numeroPessoas={watchedNumeroPessoas || 0}
+                onMesasSelect={handleMesasSelect}
+              />
             </div>
           </div>
         </div>
