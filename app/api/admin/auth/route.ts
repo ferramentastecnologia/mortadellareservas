@@ -43,11 +43,6 @@ export async function POST(request: Request) {
       throw new AuthenticationError('Email ou senha incorretos');
     }
 
-    // Verificar se usuário está ativo
-    if (!user.active) {
-      throw new AuthenticationError('Usuário desativado');
-    }
-
     // Verificar senha usando bcrypt
     const passwordMatch = await comparePassword(password, user.password);
 
@@ -56,12 +51,11 @@ export async function POST(request: Request) {
     }
 
     // Gerar tokens JWT
-    const permissions = user.permissions ? JSON.parse(user.permissions) : [];
     const tokens = generateTokenPair({
       userId: user.id,
       email: user.email,
-      role: user.role,
-      permissions,
+      role: 'admin',
+      permissions: [],
     });
 
     console.log(`✅ Login realizado: ${user.email} (${requestId})`);
@@ -76,8 +70,8 @@ export async function POST(request: Request) {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
-          permissions,
+          role: 'admin',
+          permissions: [],
         },
       },
       200

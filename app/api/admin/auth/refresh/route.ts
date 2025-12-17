@@ -29,20 +29,19 @@ export async function POST(request: Request) {
       where: { id: decoded.userId },
     });
 
-    if (!user || !user.active) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Usuário inválido ou desativado' },
+        { success: false, error: 'Usuário inválido' },
         { status: 401 }
       );
     }
 
     // Gerar novo access token
-    const permissions = user.permissions ? JSON.parse(user.permissions) : [];
     const newAccessToken = generateAccessToken({
       userId: user.id,
       email: user.email,
-      role: user.role,
-      permissions,
+      role: 'admin',
+      permissions: [],
     });
 
     console.log(`✅ Token renovado: ${user.email}`);
